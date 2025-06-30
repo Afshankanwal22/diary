@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dashboard-page">
+  <div class="dashboard-wrapper">
+
+   
+    <aside class="sidebar">
+      <h2>📓 My Diary</h2>
+      <ul>
+        <li><a href="write.html">✍️ Write Diary</a></li>
+        <li><a href="entries.html">📂 View Entries</a></li>
+        <li><a href="setting.html">⚙️ Settings</a></li>
+        <li><a href="#" onclick="logout()">🚪 Logout</a></li>
+      </ul>
+    </aside>
+
+  
+    <main class="main-content">
+      <header>
+        <h3>Hello, <span id="userName">User</span> 👋</h3>
+        <div class="top-buttons">
+          <button onclick="goBack()">🔙 Back</button>
+          <button onclick="toggleDarkMode()">🌙</button>
+        </div>
+      </header>
+
+      <section class="welcome">
+        <h1>Welcome to Your Digital Diary 📔</h1>
+        <p>Select any option from the left to begin.</p>
+      </section>
+    </main>
+
+  </div>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="app.js"></script>
+</body>
+</html>

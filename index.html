@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - Digital Diary</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+ <body class="login-page">
+  <div class="login-wrapper">
+    <div class="login-container">
+      <h1>🔐 Digital Diary</h1>
+      <form id="loginForm">
+        <input type="email" id="username" placeholder="Enter your email" required />
+        <input type="password" id="password" placeholder="Enter your password" required />
+
+        <div class="show-password">
+          <input type="checkbox" id="showPass" onclick="togglePassword()" />
+          <label for="showPass">Show Password</label>
+        </div>
+
+        <button type="submit">Login</button>
+
+        <div class="register-text">
+          Don't have an account? <a href="#">Register</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="app.js"></script>
+</body>
+</html>

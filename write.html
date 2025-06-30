@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="write-page">
+  <div class="write-container">
+    <header>
+      <h2>📅 <span id="dateTime"></span></h2>
+      <button onclick="toggleDarkMode()">🌙</button>
+    </header>
+
+    <input type="text" id="title" placeholder="Diary Title..." />
+
+    <textarea id="diaryContent" placeholder="Start writing here..."></textarea>
+
+    <div class="write-buttons">
+      <input type="file" id="imageUpload" accept="image/*" onchange="previewImage()" />
+      <button onclick="saveDiary()">💾 Save</button>
+      <button onclick="loadDiary()">📂 Load Last</button>
+    </div>
+
+    <div id="preview"></div>
+  </div>
+    
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script src="app.js"></script>
+</body>
+</html>
