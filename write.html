@@ -19,7 +19,7 @@
 
     <div class="write-buttons">
       <input type="file" id="imageUpload" accept="image/*" onchange="previewImage()" />
-      <button onclick="saveDiary()">💾 Save</button>
+      <button id="saveButton">💾 Save</button>
       <button onclick="loadDiary()">📂 Load Last</button>
     </div>
 
@@ -27,9 +27,8 @@
   </div>
     
 
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ <script src="app.js"></script>
 </body>
 </html>

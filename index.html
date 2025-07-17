@@ -5,31 +5,60 @@
   <title>Login - Digital Diary</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
- <body class="login-page">
-  <div class="login-wrapper">
-    <div class="login-container">
-      <h1>🔐 Digital Diary</h1>
-      <form id="loginForm">
-        <input type="email" id="username" placeholder="Enter your email" required />
-        <input type="password" id="password" placeholder="Enter your password" required />
+<body class="bg-gray-100 flex items-center justify-center h-screen">
 
-        <div class="show-password">
-          <input type="checkbox" id="showPass" onclick="togglePassword()" />
-          <label for="showPass">Show Password</label>
-        </div>
-
-        <button type="submit">Login</button>
-
-        <div class="register-text">
-          Don't have an account? <a href="#">Register</a>
-        </div>
-      </form>
-    </div>
+<div class="w-full max-w-md bg-white shadow-md rounded-lg p-6 space-y-6">
+  <div class="text-center">
+    <h2 class="text-2xl font-bold">Login to Digital Diary</h2>
+    <p class="text-sm text-gray-500">Securely access your notes and memories</p>
   </div>
 
+  <!-- OAuth Buttons -->
+  <div class="space-y-2">
+    <button id="googleLoginBtn" 
+      class="w-full flex items-center justify-center gap-2 border border-gray-300 rounded p-2 text-sm hover:bg-gray-100">
+      <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="h-5 w-5" alt=""> Continue with Google
+    </button>
+    <button id="githubLoginBtn"
+      class="w-full flex items-center justify-center gap-2 border border-gray-300 rounded p-2 text-sm hover:bg-gray-100">
+      <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" class="h-5 w-5" alt="GitHub Logo">
+ Continue with GitHub
+    </button>
+  </div>
 
+  <div class="flex items-center gap-2 text-gray-400 text-sm">
+    <div class="h-px flex-1 bg-gray-200"></div>
+    OR
+    <div class="h-px flex-1 bg-gray-200"></div>
+  </div>
+
+  <!-- Email Login Form -->
+  <form id="loginForm" class="space-y-4">
+    <input id="loginEmailInput" type="email" required placeholder="Email Address"
+      class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+
+    <input id="loginPasswordInput" type="password" required placeholder="Password"
+      class="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+
+    <div class="text-right text-sm">
+      <a href="forget.html" class="text-blue-600 hover:underline">Forgot password?</a>
+    </div>
+
+    <button type="submit"
+      class="w-full bg-blue-600 text-white rounded p-2 font-medium hover:bg-blue-700">
+      Continue
+    </button>
+  </form>
+
+  <div class="text-center text-sm text-gray-600">
+    Don’t have an account? <a href="signup.html" class="text-blue-600 hover:underline">Sign up</a>
+  </div>
+</div>
+
+ <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="app.js"></script>
 </body>
 </html>
