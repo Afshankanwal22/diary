@@ -95,10 +95,13 @@ const googleBtn = document.getElementById("googleLoginBtn");
 if (googleBtn) {
   googleBtn.addEventListener("click", async () => {
     showLoader();
+    const redirectTo= window.location.hostname === 'https://127.0.0.1/'
+    ? window.location.origin + '/dashboard.html'
+    : window.location.origin + '/login-diary'
     const { error } = await client.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin + '/dashboard.html',
+        redirectTo: redirectTo,
         queryParams: { access_type: 'offline', prompt: 'consent' }
       }
     });
@@ -156,42 +159,42 @@ async function saveDiary() {
     .then(() => window.location.href = "entries.html");
 }
 
-// ========== Load Entries ==========
-async function loadAllEntries() {
-   showLoader();
-  const container = document.getElementById("entriesList");
-  if (!container) return;
+// // ========== Load Entries ==========
+// async function loadAllEntries() {
+//    showLoader();
+//   const container = document.getElementById("entriesList");
+//   if (!container) return;
 
-  const { data: { user } } = await client.auth.getUser();
-  if (!user) return (window.location.href = "index.html");
+//   const { data: { user } } = await client.auth.getUser();
+//   if (!user) return (window.location.href = "index.html");
 
-  const { data, error } = await client
-    .from("diary_entries")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("date", { ascending: false });
-      hideLoader();
+//   const { data, error } = await client
+//     .from("diary_entries")
+//     .select("*")
+//     .eq("user_id", user.id)
+//     .order("date", { ascending: false });
+//       hideLoader();
 
-  if (!data || data.length === 0) {
-    container.innerHTML = `<p style="text-align:center; color:gray;">No entries found yet.</p>`;
-    return;
-  }
+//   if (!data || data.length === 0) {
+//     container.innerHTML = `<p style="text-align:center; color:gray;">No entries found yet.</p>`;
+//     return;
+//   }
 
-  container.innerHTML = "";
-  data.forEach(entry => {
-    const card = document.createElement("div");
-    card.className = "entry-card";
-    card.innerHTML = `
-      <h3>${entry.title}</h3>
-      <small>${entry.date}</small>
-      <p>${entry.content.slice(0, 100)}...</p>
-      <div class="entry-actions">
-        <button onclick="editEntry(${entry.id})">✏️ Edit</button>
-        <button onclick="deleteEntry(${entry.id})">🗑 Delete</button>
-      </div>`;
-    container.appendChild(card);
-  });
-}
+//   container.innerHTML = "";
+//   data.forEach(entry => {
+//     const card = document.createElement("div");
+//     card.className = "entry-card";
+//     card.innerHTML = `
+//       <h3>${entry.title}</h3>
+//       <small>${entry.date}</small>
+//       <p>${entry.content.slice(0, 100)}...</p>
+//       <div class="entry-actions">
+//         <button onclick="editEntry(${entry.id})">✏️ Edit</button>
+//         <button onclick="deleteEntry(${entry.id})">🗑 Delete</button>
+//       </div>`;
+//     container.appendChild(card);
+//   });
+// }
 
 
 
@@ -255,7 +258,10 @@ client.auth.onAuthStateChange(async (event, session) => {
 
     const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email;
     const email = user.email;
-    const image = user.user_metadata?.avatar_url || user.user_metadata?.picture || "https://via.placeholder.com/150";
+    const image =
+      user.user_metadata?.avatar_url ||
+      user.user_metadata?.picture ||
+      "https://via.placeholder.com/150";
 
     const userName = document.getElementById("userName");
     const userDP = document.getElementById("userDP");
@@ -263,9 +269,19 @@ client.auth.onAuthStateChange(async (event, session) => {
     if (userName) userName.textContent = name;
 
     if (userDP) {
-      userDP.innerHTML = image
-        ? `<img src="${image}" alt="DP" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />`
-        : name.charAt(0).toUpperCase();
+      // Check if image is a placeholder or missing
+      const isPlaceholder =
+        !image ||
+        image.trim() === "" ||
+        image.includes("placeholder.com");
+
+      if (isPlaceholder) {
+        const firstLetter = name.charAt(0).toUpperCase();
+        userDP.innerHTML = firstLetter;
+        
+      } else {
+        userDP.innerHTML = `<img src="${image}" alt="DP" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />`;
+      }
     }
 
     const profileNameElem = document.getElementById("profileName");
@@ -276,13 +292,15 @@ client.auth.onAuthStateChange(async (event, session) => {
     if (profileEmailElem) profileEmailElem.textContent = email;
     if (profileImageElem) profileImageElem.src = image;
   } else {
-    // Not logged in, redirect
-    if (!window.location.href.includes("index.html") && !window.location.href.includes("login.html")) {
+    // Redirect if not logged in
+    if (
+      !window.location.href.includes("index.html") &&
+      !window.location.href.includes("login.html")
+    ) {
       window.location.href = "index.html";
     }
   }
 });
-
 
 // ========== Profile Popup Toggle ==========
 const profileTrigger = document.getElementById("userDP");
@@ -302,11 +320,12 @@ if (profileTrigger && profileCard) {
 }
 
 //====================save post=====================//
+
 document.addEventListener("DOMContentLoaded", () => {
-  const saveBtn = document.getElementById("saveButton");
+  const saveBtn = document.getElementById("saveBtn");
 
   if (!saveBtn) {
-    console.error("Save button not found in DOM!");
+
     return;
   }
 
@@ -317,7 +336,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const title = document.getElementById("title").value.trim();
       const content = document.getElementById("diaryContent").value.trim();
-      const image = document.getElementById("imageUpload").files[0];
+      const imageFile = document.getElementById("imageUpload").files[0];
 
       if (!title || !content) {
         throw new Error("Please enter both title and content.");
@@ -325,7 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const {
         data: { user },
-        error: userError
+        error: userError,
       } = await client.auth.getUser();
 
       if (userError || !user) {
@@ -334,33 +353,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
       let imageUrl = null;
 
-      if (image) {
-        const { data, error } = await client.storage
-          .from("images")
-          .upload(`diary/${Date.now()}_${image.name}`, image);
+      // ===== Upload image to Supabase Storage if file selected =====
+      if (imageFile) {
+      const ext = imageFile.name.split('.').pop();
+        const imagePath = `avatars/user-${user.id}.${ext}`;
 
-        if (error) {
+        // Upload the image
+        const { error: uploadError } = await client.storage
+          .from("user")
+          .upload(imagePath, imageFile, {
+            upsert: true,
+          });
+
+        if (uploadError) {
+          console.error("Upload Error:", uploadError.message);
           throw new Error("Image upload failed.");
         }
 
-        imageUrl = client.storage
-          .from("images")
-          .getPublicUrl(data.path).data.publicUrl;
+        // Get public URL after upload
+        const { data: publicUrlData } = client.storage
+          .from("user")
+          .getPublicUrl(imagePath);
+
+        imageUrl = publicUrlData.publicUrl;
+        console.log("Image URL:", imageUrl);
       }
 
-      const { error: insertError } = await client
-        .from("my_diary")
-        .insert([
-          {
-            title,
-            content,
-            user_id: user.id,
-            image_url: imageUrl,
-            date: new Date().toISOString()
-          }
-        ]);
+      // ===== Save diary entry =====
+      const { error: insertError } = await client.from("my_diary").insert([
+        {
+          title,
+          content,
+          user_id: user.id,
+
+          date: new Date().toISOString(),
+        },
+      ]);
 
       if (insertError) {
+        console.error("Insert Error:", insertError.message);
         throw new Error("Could not save diary.");
       }
 
@@ -369,96 +400,46 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
     } catch (err) {
-      console.error("Error:", err.message);
+      // console.error("Error:", err.message);
       Swal.fire("❌ Error", err.message, "error");
     } finally {
-      // ✅ Always hide loader & enable button
       hideLoader();
       saveBtn.disabled = false;
     }
   });
 });
 
-//==================blogs=================//
-
-//   const blogGrid = document.getElementById("blogGrid");
-//   console.log(blogGrid);
-  
-// async function loadBlogs() {
-  
-
-//   const { data: blogs, error } = await client
-
-  
-//     .from("my_diary")
-//     .select(`id, title, content, date, image_url `)
-//     .order("date", { ascending: true });
-
-//   if (error) {
-//     console.error("Error loading blogs:", error);
-//     blogGrid.innerHTML = `<p class="text-red-500 text-center">Error loading blogs.</p>`;
-//     return;
-//   }
-
-//   if (!blogs || blogs.length === 0) {
-//     blogGrid.innerHTML = `<p class="text-gray-600 text-center w-full">No blogs found.</p>`;
-//     return;
-//   }
-
-//   blogGrid.innerHTML = blogs.map(blog => `
-//     <div class="bg-white rounded-xl shadow-md overflow-hidden flex flex-col hover:shadow-xl transition relative">
-//       ${blog.image_url ? `
-//         <img src="${blog.image_url}" class="w-full h-48 object-cover" alt="Blog Image">
-//       ` : ""}
-//       <div class="p-5 flex-1 flex flex-col justify-between">
-//         <div>
-//           <h2 class="text-xl font-bold text-gray-800">${blog.title}</h2>
-//           <p class="mt-2 text-gray-600 text-sm">${blog.content?.slice(0, 150) || ''}...</p>
-//         </div>
-//         <div class="mt-4 flex justify-end gap-2">
-//           <button onclick="editBlog('${blog.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-sm rounded">Edit</button>
-//           <button onclick="deleteBlog('${blog.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm rounded">Delete</button>
-//         </div>
-//         <p class="text-xs text-gray-400 mt-2">${new Date(blog.date).toDateString()}</p>
-//       </div>
-//     </div>
-//   `).join('');
-// }
-
-// window.addEventListener("DOMContentLoaded",blogGrid && loadBlogs);
-
-
 // //==========Delete======================//
-// async function deleteBlog(blogId) {
-//   const confirm = await Swal.fire({
-//     title: "Are you sure?",
-//     text: "This blog will be permanently deleted!",
-//     icon: "warning",
-//     showCancelButton: true,
-//     confirmButtonColor: "#d33",
-//     cancelButtonText: "Cancel",
-//     confirmButtonText: "Delete"
-//   });
+async function deleteBlog(blogId) {
+  const confirm = await Swal.fire({
+    title: "Are you sure?",
+    text: "This blog will be permanently deleted!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonText: "Cancel",
+    confirmButtonText: "Delete"
+  });
 
-//   if (confirm.isConfirmed) {
-//      showLoader();
-//     const { error } = await client
-//       .from("my_diary")
-//       .delete()
-//       .eq("id", blogId);
+  if (confirm.isConfirmed) {
+     showLoader();
+    const { error } = await client
+      .from("my_diary")
+      .delete()
+      .eq("id", blogId);
 
-//     if (error) {
-//       hideLoader();
-//       console.error("Delete error:", error);
-//       Swal.fire("Error", "Could not delete the blog.", "error");
-//     } else {
-//       hideLoader();
-//       Swal.fire("Deleted!", "Blog has been removed.", "success").then(loadBlogs);
-//     }
-//   }
-// }
+    if (error) {
+      hideLoader();
+      console.error("Delete error:", error);
+      Swal.fire("Error", "Could not delete the blog.", "error");
+    } else {
+      hideLoader();
+      Swal.fire("Deleted!", "Blog has been removed.", "success").then(loadBlogs);
+    }
+  }
+}
 
-
+//================My Post=============================//
   const blogGrid = document.getElementById("blogGrid");
 console.log(blogGrid);
 
@@ -472,26 +453,51 @@ async function loadBlogs() {
     if (authError || !user) {
       throw authError || new Error("User not found.");
     }
+let name = "Unknown User";
+if (user.user_metadata) {
+  name = user.user_metadata.full_name || user.user_metadata.name || user.email || "No Name";
+}
 
-   
-    const { data: profile, error: profileError } = await client
-      .from("profiles")
-      .select("name, avatar_url")
-      .eq("id", user.id)
-      .single();
+// ✅ Safely get profile URL (avatar)
+let profileUrl = "https://i.ibb.co/YZ1JqJg/default-avatar.png";
+if (user.user_metadata) {
+  profileUrl =
+    user.user_metadata.avatar_url ||
+    user.user_metadata.picture ||
+    "https://i.ibb.co/YZ1JqJg/default-avatar.png";
+}
 
-    if (profileError) {
-      console.error("Profile fetch error:", profileError);
+// ✅ Insert or update profile in Supabase
+const { error: upsertError } = await client
+  .from("profiles")
+  .upsert([
+    {
+      user_id: user.id,
+      name: name,
+      imageurl: profileUrl
     }
+  ], {
+    onConflict: "user_id"
+  });
 
-    const userName = profile?.name || "Unknown";
-    const userAvatar = profile?.avatar_url || "https://i.ibb.co/YZ1JqJg/default-avatar.png"; 
+if (upsertError) {
+  console.error("Profile Upsert Error:", upsertError.message);
+} else {
+  console.log("Profile inserted/updated successfully");
+}
 
+    
    
     const { data: blogs, error } = await client
       .from("my_diary")
-      .select("id, title, content, date, image_url")
+      .select(`
+  id, title, content, date,
+  profiles(name,imageurl,user_id)
+`)
+
+     .eq("user_id", user.id)
       .order("date", { ascending: true });
+      
 
     if (error) {
       console.error("Error loading blogs:", error);
@@ -499,31 +505,45 @@ async function loadBlogs() {
       return;
     }
 
+
     if (!blogs || blogs.length === 0) {
+      console.log(blogs);
+      
       blogGrid.innerHTML = `<p class="text-gray-600 text-center w-full">No blogs found.</p>`;
       return;
     }
 //=============map array===================//
-    blogGrid.innerHTML = blogs.map(blog => `
-      <div class="bg-white rounded-xl shadow-md overflow-hidden flex flex-col hover:shadow-xl transition relative">
-        ${blog.image_url ? `<img src="${blog.image_url}" class="w-full h-48 object-cover" alt="Blog Image">` : ""}
-        <div class="p-5 flex-1 flex flex-col justify-between">
-          <div class="flex items-center gap-3 mb-3">
-            <img src="${userAvatar}" class="w-8 h-8 rounded-full object-cover" alt="Avatar">
-            <span class="text-sm font-medium text-gray-700">${userName}</span>
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-gray-800">${blog.title}</h2>
-            <p class="mt-2 text-gray-600 text-sm">${blog.content?.slice(0, 150) || ''}...</p>
-          </div>
-          <div class="mt-4 flex justify-end gap-2">
-            <button onclick="editBlog('${blog.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-sm rounded">Edit</button>
-            <button onclick="deleteBlog('${blog.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm rounded">Delete</button>
-          </div>
-          <p class="text-xs text-gray-400 mt-2">${new Date(blog.date).toDateString()}</p>
+   blogGrid.innerHTML = blogs.map(blog => {
+  const userName = blog.profiles?.name || "Unknown";
+  const userAvatar = blog.profiles?.imageurl;
+  const userInitial = userName.charAt(0).toUpperCase();
+
+  const avatarHTML = userAvatar
+    ? `<img src="${userAvatar}" class="w-8 h-8 rounded-full object-cover" alt="Avatar">`
+    : `<div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">${userInitial}</div>`;
+
+  return `
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition duration-300">
+      ${blog.image_url ? `<img src="${blog.image_url}" class="w-full h-48 object-cover" alt="Blog Image">` : ""}
+      <div class="p-5 flex-1 flex flex-col justify-between">
+        <div class="flex items-center gap-3 mb-3">
+          ${avatarHTML}
+          <span class="text-sm font-medium text-gray-700">${userName}</span>
         </div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900 mb-1">${blog.title}</h2>
+          <p class="text-gray-600 text-sm">${blog.content?.slice(0, 150) || ''}...</p>
+        </div>
+        <div class="mt-4 flex justify-end gap-2">
+          <button onclick="editBlog('${blog.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-sm rounded-lg">Edit</button>
+          <button onclick="deleteBlog('${blog.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm rounded-lg">Delete</button>
+        </div>
+        <p class="text-xs text-gray-400 mt-3 text-right">${new Date(blog.date).toDateString()}</p>
       </div>
-    `).join('');
+    </div>
+  `;
+}).join('');
+
   } catch (err) {
     console.error("Load error:", err.message);
     blogGrid.innerHTML = `<p class="text-red-500 text-center">Something went wrong.</p>`;
@@ -535,28 +555,40 @@ window.addEventListener("DOMContentLoaded", blogGrid && loadBlogs);
 //==================Update Blogs ======================//
 
 async function editBlog(id) {
-   showLoader();
+  showLoader();
   try {
+    // ✅ Step 1: Get current logged-in user
+    const {
+      data: { user },
+      error: userError
+    } = await client.auth.getUser();
+
+    if (userError || !user) throw new Error("User not logged in");
+
+    // ✅ Step 2: Fetch the blog (only if it belongs to current user)
     const { data: blog, error: fetchError } = await client
       .from("my_diary")
       .select("title, content")
       .eq("id", id)
+      .eq("user_id", user.id) // <-- filter by user_id
       .single();
 
     if (fetchError) throw fetchError;
 
+    // ✅ Step 3: Show SweetAlert form
     const { value: formValues } = await Swal.fire({
       title: '✏️ Edit Blog',
       html: `
         <div style="text-align: left;">
-          <label for="swal-title" style="display: inline-block; margin-bottom: 4px; font-weight: bold;">Title</label>
-          <input id="swal-title" class="swal2-input" placeholder="Enter blog title" value="${blog.title}">
+          <label for="swal-title" style="font-weight: bold;">Title</label>
+          <input id="swal-title" class="swal2-input" value="${blog.title}">
         </div>
-        <div style="text-align: left; margin-top: 6px;">
-          <label for="swal-content" style="display: inline-block; margin-bottom: 4px; font-weight: bold;">Description</label>
-          <textarea id="swal-content" class="swal2-textarea" placeholder="Enter blog content...">${blog.content}</textarea>
+        <div style="text-align: left; margin-top: 2px;">
+          <label for="swal-content" style="font-weight: bold;">Description</label>
+          <textarea id="swal-content" class="swal2-textarea">${blog.content}</textarea>
         </div>
       `,
+
       focusConfirm: false,
       confirmButtonText: 'Update Blog',
       showCancelButton: true,
@@ -574,62 +606,91 @@ async function editBlog(id) {
       }
     });
 
-    if (!formValues){
-       hideLoader();
-       return};
+    if (!formValues) {
+      hideLoader();
+      return;
+    }
 
+    // ✅ Step 4: Update blog in DB
     const { error: updateError } = await client
       .from("my_diary")
       .update({
         title: formValues.title,
-        content: formValues.content,
+        content: formValues.content
       })
-      .eq("id", id);
-      hideLoader();
+      .eq("id", id)
+      .eq("user_id", user.id); // extra safety
 
-    if (updateError) throw updateError;{
+    hideLoader();
 
-    Swal.fire("✅ Updated!", "Your blog post has been updated.", "success");}
-    loadBlogs(); 
+    if (updateError) throw updateError;
+
+    Swal.fire("✅ Updated!", "Your blog post has been updated.", "success");
+    loadBlogs();
 
   } catch (error) {
-     hideLoader();
+    hideLoader();
     console.error("Error updating blog:", error.message);
-    Swal.fire(" Error", error.message, "error");
+    Swal.fire("❌ Error", error.message, "error");
   }
 }
 
-
 //=========All Blogs ================//
- const allblogGrid = document.getElementById("allBlogGrid");
+ document.addEventListener("DOMContentLoaded", () => {
+  const allblogGrid = document.getElementById("allBlogGrid");
 
-    async function loadAllBlogs() {
-      const { data: blogs, error } = await client
-        .from("my_diary")
-        .select("*")
-        .order("date", { ascending: true });
+  async function loadAllBlogs() {
+    const { data: blogs, error } = await client
+      .from("my_diary")
+      .select(`
+        id,
+        title,
+        content,
+        date,
+        profiles (
+          name,
+          imageurl
+        )
+      `)
+      .order("date", { ascending: true });
 
-      if (error) {
-        allblogGrid.innerHTML = `<p class="text-red-500">Error loading blogs.</p>`;
-        return console.error("Blog Load Error:", error);
-      }
-
-      if (!blogs.length) {
-        allblogGrid.innerHTML = `<p class="text-gray-600">No public blogs yet.</p>`;
-        return;
-      }
-
-      allblogGrid.innerHTML = blogs.map(blog => `
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col">
-          ${blog.image_url ? `<img src="${blog.image_url}" class="w-full h-48 object-cover rounded mb-3">` : ""}
-          <h2 class="text-xl font-semibold mb-2">${blog.title}</h2>
-          <p class="text-sm mb-3">${blog.content.slice(0, 150)}...</p>
-          <div class="mt-auto">
-            <p class="text-xs text-gray-500">By: <b>${blog.profiles?.name || "Anonymous"}</b></p>
-            <p class="text-xs text-gray-400">${new Date(blog.date).toLocaleDateString()}</p>
-          </div>
-        </div>
-      `).join("");
+    if (error) {
+      allblogGrid.innerHTML = `<p class="text-red-500">Error loading blogs.</p>`;
+      return console.error("Blog Load Error:", error);
     }
 
-    loadAllBlogs();
+    if (!blogs.length) {
+      allblogGrid.innerHTML = `<p class="text-gray-600">No public blogs yet.</p>`;
+      return;
+    }
+
+    allblogGrid.innerHTML = blogs
+      .map((blog) => {
+        const name = blog.profiles?.name || "Anonymous";
+        const firstLetter = name.charAt(0).toUpperCase();
+        const profileUrl = blog.profiles?.imageurl;
+
+        return `
+          <div class=" max-w-sm w-full bg-white dark:bg-gray-800 rounded-lg  shadow p-4 flex flex-col transition-transform hover:scale-[1.02] duration-300 ">
+            ${blog.imageurl ? `<img src="${blog.imageurl}" class="w-full h-40 object-cover rounded mb-3">` : ""}
+            <h2 class="text-lg font-bold mb-2">${blog.title}</h2>
+            <p class="text-sm mb-3">${blog.content.slice(0, 10)}...</p>
+            
+            <div class="mt-auto flex items-center gap-2">
+              ${
+                profileUrl
+                  ? `<img src="${profileUrl}" alt="${name}" class="w-6 h-6 rounded-full object-cover">`
+                  : `<div class="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">${firstLetter}</div>`
+              }
+              <p class="text-xs text-gray-500 font-medium">${name}</p>
+            </div>
+
+            <p class="text-xs text-gray-400">${new Date(blog.date).toLocaleDateString()}</p>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  loadAllBlogs();
+});
