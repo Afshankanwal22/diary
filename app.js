@@ -1,38 +1,10 @@
 // ========== Supabase Setup ==========
-const supabaseUrl = "https://himadfgtvxpranhtedxf.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpbWFkZmd0dnhwcmFuaHRlZHhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MzkwOTksImV4cCI6MjA2NzAxNTA5OX0.BxdQK6QQkrlR_CgONWNZfVZRZoB2JEIQjEPuf4YZm0I";
+const supabaseUrl = 'https://himadfgtvxpranhtedxf.supabase.co'
+console.log(supabaseUrl);
+
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpbWFkZmd0dnhwcmFuaHRlZHhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MzkwOTksImV4cCI6MjA2NzAxNTA5OX0.BxdQK6QQkrlR_CgONWNZfVZRZoB2JEIQjEPuf4YZm0I"
 const { createClient } = supabase;
 const client = createClient(supabaseUrl, supabaseKey);
-
-// ========== Dark Mode ==========
-if (localStorage.getItem("theme") === "dark") {
-  document.body.classList.add("dark-mode");
-  const toggle = document.getElementById("darkToggle");
-  if (toggle) toggle.checked = true;
-}
-function toggleDarkMode() {
-  document.body.classList.toggle("dark-mode");
-  const mode = document.body.classList.contains("dark-mode") ? "dark" : "light";
-  localStorage.setItem("theme", mode);
-}
-
-function showLoader() {
-  const loader = document.createElement("div");
-  loader.id = "globalLoader";
-  loader.innerHTML = `
-    <div class="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-      <div class="w-16 h-16 border-[6px] border-white border-t-transparent rounded-full animate-spin"></div>
-    </div>
-  `;
-  document.body.appendChild(loader);
-}
-
-function hideLoader() {
-  const loader = document.getElementById("globalLoader");
-  if (loader) loader.remove();
-}
-
-
 
 // ========== Sign Up ==========
 const signupForm = document.getElementById('signupForm');
@@ -44,6 +16,8 @@ if (signupForm) {
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
     const confirmPassword = document.getElementById('signupConfirmPassword').value;
+    console.log(email,password);
+    
 
     if (password !== confirmPassword) {
        
@@ -95,13 +69,13 @@ const googleBtn = document.getElementById("googleLoginBtn");
 if (googleBtn) {
   googleBtn.addEventListener("click", async () => {
     showLoader();
-    const redirectTo= window.location.hostname === 'https://127.0.0.1/'
-    ? window.location.origin + '/dashboard.html'
-    : window.location.origin + '/login-diary'
+    // const redirectTo= window.location.hostname === 'https://127.0.0.1/'
+    // ? window.location.origin + '/dashboard.html'
+    // : window.location.origin + '/login-diary'
     const { error } = await client.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: redirectTo,
+        redirectTo: window.location.origin + '/dashboard.html',
         queryParams: { access_type: 'offline', prompt: 'consent' }
       }
     });
@@ -159,48 +133,9 @@ async function saveDiary() {
     .then(() => window.location.href = "entries.html");
 }
 
-// // ========== Load Entries ==========
-// async function loadAllEntries() {
-//    showLoader();
-//   const container = document.getElementById("entriesList");
-//   if (!container) return;
-
-//   const { data: { user } } = await client.auth.getUser();
-//   if (!user) return (window.location.href = "index.html");
-
-//   const { data, error } = await client
-//     .from("diary_entries")
-//     .select("*")
-//     .eq("user_id", user.id)
-//     .order("date", { ascending: false });
-//       hideLoader();
-
-//   if (!data || data.length === 0) {
-//     container.innerHTML = `<p style="text-align:center; color:gray;">No entries found yet.</p>`;
-//     return;
-//   }
-
-//   container.innerHTML = "";
-//   data.forEach(entry => {
-//     const card = document.createElement("div");
-//     card.className = "entry-card";
-//     card.innerHTML = `
-//       <h3>${entry.title}</h3>
-//       <small>${entry.date}</small>
-//       <p>${entry.content.slice(0, 100)}...</p>
-//       <div class="entry-actions">
-//         <button onclick="editEntry(${entry.id})">✏️ Edit</button>
-//         <button onclick="deleteEntry(${entry.id})">🗑 Delete</button>
-//       </div>`;
-//     container.appendChild(card);
-//   });
-// }
-
-
-
 // ========== Logout ==========
+
 async function logout() {
-     showLoader();
   const { data: { user } } = await client.auth.getUser();
 
   Swal.fire({
@@ -211,11 +146,15 @@ async function logout() {
     confirmButtonText: "Yes, Logout"
   }).then(async (result) => {
     if (result.isConfirmed) {
-   
-       hideLoader();
+      showLoader();  // 👈 only show loader if confirmed
+
       await client.auth.signOut();
+      hideLoader();  // 👈 hide loader after sign out
+
       Swal.fire({ icon: "success", title: "Logged out", timer: 1200, showConfirmButton: false });
+
       const provider = user?.app_metadata?.provider;
+
       setTimeout(() => {
         if (provider === "google") {
           window.location.href = "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?continue=http://127.0.0.1:5501/index.html";
@@ -223,9 +162,12 @@ async function logout() {
           window.location.href = "index.html";
         }
       }, 1300);
+    } else {
+      hideLoader(); // 👈 if user cancels, still ensure loader hides (optional safety)
     }
   });
 }
+
 
 // ========== Forgot Password ==========
 const forgotForm = document.getElementById("forgotForm");
@@ -318,6 +260,73 @@ if (profileTrigger && profileCard) {
     }
   });
 }
+//=======================update profile======================//
+document.addEventListener("DOMContentLoaded", () => {
+  const profileImage = document.getElementById("profileImage");
+
+  if (!profileImage) {
+    console.warn("profileImage element not found");
+    return;
+  }
+
+  profileImage.addEventListener("click", async () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+
+    fileInput.onchange = async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const fileName = `${Date.now()}_${file.name}`;
+      const folder = "avatars";
+
+      const { data: userData, error: userError } = await client.auth.getUser();
+      if (userError || !userData.user) {
+        return Swal.fire("Error", "User not found", "error");
+      }
+
+      const userId = userData.user.id;
+
+      Swal.fire({
+        title: "Uploading...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      const { error: uploadError } = await client.storage
+        .from("user") // ✅ your correct bucket name
+        .upload(`${folder}/${fileName}`, file, {
+          upsert: true,
+        });
+
+      if (uploadError) {
+        return Swal.fire("Failed", uploadError.message, "error");
+      }
+
+      // ✅ Get public URL
+      const {
+        data: { publicUrl },
+      } = client.storage.from("user").getPublicUrl(`${folder}/${fileName}`);
+
+      // ✅ Save in DB
+      const { error: updateError } = await client
+        .from("profiles")
+        .update({ imageurl: publicUrl })
+        .eq("id", userId);
+
+      if (updateError) {
+        return Swal.fire("Error", "Failed to update profile", "error");
+      }
+
+      profileImage.src = publicUrl;
+
+      Swal.fire("Uploaded!", "Profile image updated successfully", "success");
+    };
+
+    fileInput.click();
+  });
+});
 
 //====================save post=====================//
 
@@ -358,7 +367,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const ext = imageFile.name.split('.').pop();
         const imagePath = `avatars/user-${user.id}.${ext}`;
 
-        // Upload the image
         const { error: uploadError } = await client.storage
           .from("user")
           .upload(imagePath, imageFile, {
@@ -467,7 +475,6 @@ if (user.user_metadata) {
     "https://i.ibb.co/YZ1JqJg/default-avatar.png";
 }
 
-// ✅ Insert or update profile in Supabase
 const { error: upsertError } = await client
   .from("profiles")
   .upsert([
@@ -486,8 +493,6 @@ if (upsertError) {
   console.log("Profile inserted/updated successfully");
 }
 
-    
-   
     const { data: blogs, error } = await client
       .from("my_diary")
       .select(`
@@ -553,11 +558,9 @@ if (upsertError) {
 window.addEventListener("DOMContentLoaded", blogGrid && loadBlogs);
 
 //==================Update Blogs ======================//
-
 async function editBlog(id) {
   showLoader();
   try {
-    // ✅ Step 1: Get current logged-in user
     const {
       data: { user },
       error: userError
@@ -565,17 +568,18 @@ async function editBlog(id) {
 
     if (userError || !user) throw new Error("User not logged in");
 
-    // ✅ Step 2: Fetch the blog (only if it belongs to current user)
     const { data: blog, error: fetchError } = await client
       .from("my_diary")
       .select("title, content")
       .eq("id", id)
-      .eq("user_id", user.id) // <-- filter by user_id
+      .eq("user_id", user.id)
       .single();
 
     if (fetchError) throw fetchError;
 
-    // ✅ Step 3: Show SweetAlert form
+    // 📌 Loader hide before showing form
+    hideLoader();
+
     const { value: formValues } = await Swal.fire({
       title: '✏️ Edit Blog',
       html: `
@@ -588,7 +592,6 @@ async function editBlog(id) {
           <textarea id="swal-content" class="swal2-textarea">${blog.content}</textarea>
         </div>
       `,
-
       focusConfirm: false,
       confirmButtonText: 'Update Blog',
       showCancelButton: true,
@@ -597,21 +600,18 @@ async function editBlog(id) {
         const content = document.getElementById('swal-content').value.trim();
 
         if (!title || !content) {
-          hideLoader();
           Swal.showValidationMessage('Please fill in both Title and Description');
           return false;
         }
-
         return { title, content };
       }
     });
 
-    if (!formValues) {
-      hideLoader();
-      return;
-    }
+    if (!formValues) return; // cancelled
 
-    // ✅ Step 4: Update blog in DB
+    // 📌 Show loader only while saving
+    showLoader();
+
     const { error: updateError } = await client
       .from("my_diary")
       .update({
@@ -619,7 +619,7 @@ async function editBlog(id) {
         content: formValues.content
       })
       .eq("id", id)
-      .eq("user_id", user.id); // extra safety
+      .eq("user_id", user.id); 
 
     hideLoader();
 
@@ -694,3 +694,173 @@ async function editBlog(id) {
 
   loadAllBlogs();
 });
+
+//====================setting====================//
+const darkModeToggle = document.getElementById("darkModeToggle");
+const notificationsToggle = document.getElementById("notificationsToggle");
+const autosaveToggle = document.getElementById("autosaveToggle");
+const backupToggle = document.getElementById("backupToggle");
+const saveBtn = document.querySelector(".save-btn");
+
+// ===== Loader Setup =====
+const loader = document.createElement("div");
+loader.innerHTML = `
+  <div style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  ">
+    <div style="
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #4285F4;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    "></div>
+  </div>
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+`;
+loader.id = "globalLoader";
+loader.style.display = "none";
+document.body.appendChild(loader);
+
+function showLoader() {
+  loader.style.display = "flex";
+}
+function hideLoader() {
+  loader.style.display = "none";
+}
+
+// ===== User Handling (with fallback) =====
+let currentUserId = null;
+
+async function getUser() {
+  const { data: { user }, error } = await client.auth.getUser();
+
+  if (error || !user) {
+    console.warn("⚠️ No logged-in user. Using guest mode.");
+    return "guest"; 
+  }
+
+  return user.id;
+}
+
+// ===== Load Settings from Supabase =====
+async function loadSettings() {
+  showLoader();
+  currentUserId = await getUser();
+  console.log(currentUserId);
+  
+
+  const { data, error } = await client
+    .from('setting')
+    .select('*')
+    .eq('user_id', currentUserId)
+    .single();
+
+  if (error) {
+    console.log("No settings found or load error", error);
+  }
+
+  if (data) {
+    darkModeToggle.checked = data.dark_mode;
+    notificationsToggle.checked = data.notifications;
+    autosaveToggle.checked = data.autosave;
+    backupToggle.checked = data.backup;
+  }
+
+  hideLoader();
+}
+
+
+// ===== Save Settings Function =====
+async function saveSettings() {
+  if (!currentUserId) {
+    Swal.fire("⚠️ Not Logged In", "Please login to save settings.", "warning");
+    return;
+  }
+
+  const newSettings = {
+    user_id: currentUserId,
+    dark_mode: darkModeToggle.checked,
+    notifications: notificationsToggle.checked,
+    autosave: autosaveToggle.checked,
+    backup: backupToggle.checked,
+  };
+
+  // 🔁 Apply dark mode live
+  if (darkModeToggle.checked) {
+    document.body.classList.add("dark-mode");
+  } else {
+    document.body.classList.remove("dark-mode");
+  }
+
+  showLoader();
+
+  const { error } = await client
+    .from('setting')
+    .upsert(newSettings, { onConflict: ['user_id'] });
+
+  hideLoader();
+
+  if (error) {
+    Swal.fire("❌ Error", "Failed to save settings!", "error");
+    console.error(error);
+  } else {
+    Swal.fire("✅ Settings Saved", "Your preferences were saved.", "success");
+  }
+}
+
+// ===== Live Toggle (optional: applies without save button too) =====
+darkModeToggle.addEventListener("change", () => {
+  if (darkModeToggle.checked) {
+    document.body.classList.add("dark-mode");
+  } else {
+    document.body.classList.remove("dark-mode");
+  }
+});
+
+// ===== Save Button Event =====
+saveBtn.addEventListener("click", saveSettings);
+
+// ===== Load Settings Function =====
+async function loadSettings() {
+  showLoader();
+  currentUserId = await getUser();
+
+  const { data, error } = await client
+    .from('setting')
+    .select('*')
+    .eq('user_id', currentUserId)
+    .single();
+
+  if (data) {
+    darkModeToggle.checked = data.dark_mode;
+    notificationsToggle.checked = data.notifications;
+    autosaveToggle.checked = data.autosave;
+    backupToggle.checked = data.backup;
+
+    // 🌙 Apply dark mode on load
+    if (data.dark_mode) {
+      document.body.classList.add("dark-mode");
+    } else {
+      document.body.classList.remove("dark-mode");
+    }
+  }
+
+  hideLoader();
+}
+
+// ===== On Page Load =====
+document.addEventListener("DOMContentLoaded", loadSettings);
