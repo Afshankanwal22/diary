@@ -1,37 +1,37 @@
 // ========== Supabase Setup ==========
-const supabaseUrl = 'https://himadfgtvxpranhtedxf.supabase.co'
+const supabaseUrl = "https://eyyoigiytzhbtcwqvooa.supabase.co";
 console.log(supabaseUrl);
-
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpbWFkZmd0dnhwcmFuaHRlZHhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0MzkwOTksImV4cCI6MjA2NzAxNTA5OX0.BxdQK6QQkrlR_CgONWNZfVZRZoB2JEIQjEPuf4YZm0I"
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5eW9pZ2l5dHpoYnRjd3F2b29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NDE0OTUsImV4cCI6MjA3MDUxNzQ5NX0.2LNSR60X9QXh2oih_bmnP31iKo5pV82-0cPa06J2L8k";
 const { createClient } = supabase;
 const client = createClient(supabaseUrl, supabaseKey);
+console.log(client);
 
 // ========== Sign Up ==========
-const signupForm = document.getElementById('signupForm');
+const signupForm = document.getElementById("signupForm");
 if (signupForm) {
-    
-  signupForm.addEventListener('submit', async (e) => {
+  signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-  
-    const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value;
-    const confirmPassword = document.getElementById('signupConfirmPassword').value;
-    console.log(email,password);
-    
+
+    const email = document.getElementById("signupEmail").value.trim();
+    const password = document.getElementById("signupPassword").value;
+    const confirmPassword = document.getElementById(
+      "signupConfirmPassword"
+    ).value;
+    console.log(email, password);
 
     if (password !== confirmPassword) {
-       
-    
       return Swal.fire("Error", "Passwords do not match", "error");
     }
 
     try {
       const { error } = await client.auth.signUp({ email, password });
-       
-      
+
       if (error) throw error;
-      Swal.fire("Signed up!", "Check your email to confirm your account.", "success")
-        .then(() => window.location.href = "index.html");
+      Swal.fire(
+        "Signed up!",
+        "Check your email to confirm your account.",
+        "success"
+      ).then(() => (window.location.href = "index.html"));
     } catch (err) {
       Swal.fire("Signup Failed", err.message, "error");
     }
@@ -43,23 +43,27 @@ const loginForm = document.getElementById("loginForm");
 if (loginForm) {
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-     
+
     const email = document.getElementById("loginEmailInput").value.trim();
     const password = document.getElementById("loginPasswordInput").value;
 
     if (!email || !password) {
-      
       return Swal.fire("Error", "Please enter email and password", "error");
     }
 
     const { error } = await client.auth.signInWithPassword({ email, password });
     if (error) {
-    
-      let msg = error.message.includes("confirm") ? "Please confirm your email first." : error.message;
+      let msg = error.message.includes("confirm")
+        ? "Please confirm your email first."
+        : error.message;
       Swal.fire("Login Failed", msg, "error");
     } else {
-      Swal.fire({ icon: "success", title: "Login Successful!", timer: 1500, showConfirmButton: false })
-        .then(() => window.location.href = "dashboard.html");
+      Swal.fire({
+        icon: "success",
+        title: "Login Successful!",
+        timer: 1500,
+        showConfirmButton: false,
+      }).then(() => (window.location.href = "dashboard.html"));
     }
   });
 }
@@ -69,95 +73,107 @@ const googleBtn = document.getElementById("googleLoginBtn");
 if (googleBtn) {
   googleBtn.addEventListener("click", async () => {
     showLoader();
-    // const redirectTo= window.location.hostname === 'https://127.0.0.1/'
-    // ? window.location.origin + '/dashboard.html'
-    // : window.location.origin + '/login-diary'
+    const redirectTo =
+      window.location.hostname === "https://127.0.0.1/"
+        ? window.location.origin + "/dashboard.html"
+        : window.location.origin + "/login-diary";
     const { error } = await client.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin + '/dashboard.html',
-        queryParams: { access_type: 'offline', prompt: 'consent' }
-      }
+        redirectTo: window.location.origin + "/dashboard.html",
+        queryParams: { access_type: "offline", prompt: "consent" },
+      },
     });
-    if (error){
-        hideLoader();
-       Swal.fire("Google Login Failed", error.message, "error");}
+    if (error) {
+      hideLoader();
+      Swal.fire("Google Login Failed", error.message, "error");
+    }
   });
 }
 //================ github login
 const githubLoginBtn = document.getElementById("githubLoginBtn");
 if (githubLoginBtn) {
   githubLoginBtn.addEventListener("click", async () => {
-     showLoader();
+    showLoader();
     const { error } = await client.auth.signInWithOAuth({
       provider: "github",
       options: {
-       redirectTo: window.location.origin + '/dashboard.html',
-        queryParams: { access_type: 'offline', prompt: 'consent' }
-      }
+        redirectTo: window.location.origin + "/dashboard.html",
+        queryParams: { access_type: "offline", prompt: "consent" },
+      },
     });
-    if (error){
-       hideLoader();
-      Swal.fire("GitHub Login Failed", error.message, "error");}
+    if (error) {
+      hideLoader();
+      Swal.fire("GitHub Login Failed", error.message, "error");
+    }
   });
 }
 
 // ========== Save Entry ==========
 async function saveDiary() {
-
   const title = document.getElementById("title").value.trim();
   const content = document.getElementById("diaryContent").value.trim();
-  const { data: { user } } = await client.auth.getUser();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
 
-  if (!user){
-  
-     return Swal.fire("Error", "Not logged in", "error");
-    }
-  if (!content){ 
-    
-    return Swal.fire("Error", "Write something!", "error");}
+  if (!user) {
+    return Swal.fire("Error", "Not logged in", "error");
+  }
+  if (!content) {
+    return Swal.fire("Error", "Write something!", "error");
+  }
 
   const entry = {
     title: title || "Untitled Entry",
     content,
     user_id: user.id,
-    date: new Date().toLocaleString()
+    date: new Date().toLocaleString(),
   };
 
   const { error } = await client.from("diary_entries").insert([entry]);
-  if (error){
-    
-     return Swal.fire("Error", error.message, "error");}
+  if (error) {
+    return Swal.fire("Error", error.message, "error");
+  }
 
-  Swal.fire("Saved!", "Your diary has been saved.", "success")
-    .then(() => window.location.href = "entries.html");
+  Swal.fire("Saved!", "Your diary has been saved.", "success").then(
+    () => (window.location.href = "blogs.html")
+  );
 }
 
 // ========== Logout ==========
 
 async function logout() {
-  const { data: { user } } = await client.auth.getUser();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
 
   Swal.fire({
     title: "Logout?",
     text: "Are you sure you want to logout?",
     icon: "warning",
     showCancelButton: true,
-    confirmButtonText: "Yes, Logout"
+    confirmButtonText: "Yes, Logout",
   }).then(async (result) => {
     if (result.isConfirmed) {
-      showLoader();  // 👈 only show loader if confirmed
+      showLoader(); // 👈 only show loader if confirmed
 
       await client.auth.signOut();
-      hideLoader();  // 👈 hide loader after sign out
+      hideLoader(); // 👈 hide loader after sign out
 
-      Swal.fire({ icon: "success", title: "Logged out", timer: 1200, showConfirmButton: false });
+      Swal.fire({
+        icon: "success",
+        title: "Logged out",
+        timer: 1200,
+        showConfirmButton: false,
+      });
 
       const provider = user?.app_metadata?.provider;
 
       setTimeout(() => {
         if (provider === "google") {
-          window.location.href = "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?continue=http://127.0.0.1:5501/index.html";
+          window.location.href =
+            "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?continue=http://127.0.0.1:5501/index.html";
         } else {
           window.location.href = "index.html";
         }
@@ -168,37 +184,40 @@ async function logout() {
   });
 }
 
-
 // ========== Forgot Password ==========
 const forgotForm = document.getElementById("forgotForm");
 if (forgotForm) {
   forgotForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-     showLoader();
+    showLoader();
     const email = document.getElementById("email").value.trim();
     if (!email) return Swal.fire("Error", "Please enter your email", "error");
 
     const { error } = await client.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://127.0.0.1:5501/updatepass.html"
+      redirectTo: "http://127.0.0.1:5501/updatepass.html",
     });
 
     if (error) {
-       hideLoader();
+      hideLoader();
       Swal.fire("Error", error.message, "error");
     } else {
-      Swal.fire("Email Sent!", "Check your inbox to reset password.", "success");
+      Swal.fire(
+        "Email Sent!",
+        "Check your inbox to reset password.",
+        "success"
+      );
       document.getElementById("email").value = "";
     }
   });
 }
 
-
-  // ✅ NEW: Fixes reload loop after Google/GitHub login
+// ✅ NEW: Fixes reload loop after Google/GitHub login
 client.auth.onAuthStateChange(async (event, session) => {
   if (session && session.user) {
     const user = session.user;
 
-    const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email;
+    const name =
+      user.user_metadata?.full_name || user.user_metadata?.name || user.email;
     const email = user.email;
     const image =
       user.user_metadata?.avatar_url ||
@@ -213,14 +232,11 @@ client.auth.onAuthStateChange(async (event, session) => {
     if (userDP) {
       // Check if image is a placeholder or missing
       const isPlaceholder =
-        !image ||
-        image.trim() === "" ||
-        image.includes("placeholder.com");
+        !image || image.trim() === "" || image.includes("placeholder.com");
 
       if (isPlaceholder) {
         const firstLetter = name.charAt(0).toUpperCase();
         userDP.innerHTML = firstLetter;
-        
       } else {
         userDP.innerHTML = `<img src="${image}" alt="DP" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />`;
       }
@@ -334,7 +350,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveBtn = document.getElementById("saveBtn");
 
   if (!saveBtn) {
-
     return;
   }
 
@@ -350,7 +365,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!title || !content) {
         throw new Error("Please enter both title and content.");
       }
-
       const {
         data: { user },
         error: userError,
@@ -364,7 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // ===== Upload image to Supabase Storage if file selected =====
       if (imageFile) {
-      const ext = imageFile.name.split('.').pop();
+        const ext = imageFile.name.split(".").pop();
         const imagePath = `avatars/user-${user.id}.${ext}`;
 
         const { error: uploadError } = await client.storage
@@ -403,10 +417,11 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("Could not save diary.");
       }
 
-      Swal.fire("✅ Saved!", "Your diary has been saved.", "success").then(() => {
-        window.location.href = "blogs.html";
-      });
-
+      Swal.fire("✅ Saved!", "Your diary has been saved.", "success").then(
+        () => {
+          window.location.href = "blogs.html";
+        }
+      );
     } catch (err) {
       // console.error("Error:", err.message);
       Swal.fire("❌ Error", err.message, "error");
@@ -426,15 +441,12 @@ async function deleteBlog(blogId) {
     showCancelButton: true,
     confirmButtonColor: "#d33",
     cancelButtonText: "Cancel",
-    confirmButtonText: "Delete"
+    confirmButtonText: "Delete",
   });
 
   if (confirm.isConfirmed) {
-     showLoader();
-    const { error } = await client
-      .from("my_diary")
-      .delete()
-      .eq("id", blogId);
+    showLoader();
+    const { error } = await client.from("my_diary").delete().eq("id", blogId);
 
     if (error) {
       hideLoader();
@@ -442,67 +454,75 @@ async function deleteBlog(blogId) {
       Swal.fire("Error", "Could not delete the blog.", "error");
     } else {
       hideLoader();
-      Swal.fire("Deleted!", "Blog has been removed.", "success").then(loadBlogs);
+      Swal.fire("Deleted!", "Blog has been removed.", "success").then(
+        loadBlogs
+      );
     }
   }
 }
 
 //================My Post=============================//
-  const blogGrid = document.getElementById("blogGrid");
+const blogGrid = document.getElementById("blogGrid");
 console.log(blogGrid);
 
 async function loadBlogs() {
   try {
     const {
       data: { user },
-      error: authError
+      error: authError,
     } = await client.auth.getUser();
 
     if (authError || !user) {
       throw authError || new Error("User not found.");
     }
-let name = "Unknown User";
-if (user.user_metadata) {
-  name = user.user_metadata.full_name || user.user_metadata.name || user.email || "No Name";
-}
-
-// ✅ Safely get profile URL (avatar)
-let profileUrl = "https://i.ibb.co/YZ1JqJg/default-avatar.png";
-if (user.user_metadata) {
-  profileUrl =
-    user.user_metadata.avatar_url ||
-    user.user_metadata.picture ||
-    "https://i.ibb.co/YZ1JqJg/default-avatar.png";
-}
-
-const { error: upsertError } = await client
-  .from("profiles")
-  .upsert([
-    {
-      user_id: user.id,
-      name: name,
-      imageurl: profileUrl
+    let name = "Unknown User";
+    if (user.user_metadata) {
+      name =
+        user.user_metadata.full_name ||
+        user.user_metadata.name ||
+        user.email ||
+        "No Name";
     }
-  ], {
-    onConflict: "user_id"
-  });
 
-if (upsertError) {
-  console.error("Profile Upsert Error:", upsertError.message);
-} else {
-  console.log("Profile inserted/updated successfully");
-}
+    // ✅ Safely get profile URL (avatar)
+    let profileUrl = "https://i.ibb.co/YZ1JqJg/default-avatar.png";
+    if (user.user_metadata) {
+      profileUrl =
+        user.user_metadata.avatar_url ||
+        user.user_metadata.picture ||
+        "https://i.ibb.co/YZ1JqJg/default-avatar.png";
+    }
+
+    const { error: upsertError } = await client.from("profiles").upsert(
+      [
+        {
+          user_id: user.id,
+          name: name,
+          imageurl: profileUrl,
+        },
+      ],
+      {
+        onConflict: "user_id",
+      }
+    );
+
+    if (upsertError) {
+      console.error("Profile Upsert Error:", upsertError.message);
+    } else {
+      console.log("Profile inserted/updated successfully");
+    }
 
     const { data: blogs, error } = await client
       .from("my_diary")
-      .select(`
-  id, title, content, date,
+      .select(
+        `
+  id, title, content, date,user_id,
   profiles(name,imageurl,user_id)
-`)
+`
+      )
 
-     .eq("user_id", user.id)
+      .eq("user_id", user.id)
       .order("date", { ascending: true });
-      
 
     if (error) {
       console.error("Error loading blogs:", error);
@@ -510,26 +530,30 @@ if (upsertError) {
       return;
     }
 
-
     if (!blogs || blogs.length === 0) {
       console.log(blogs);
-      
+
       blogGrid.innerHTML = `<p class="text-gray-600 text-center w-full">No blogs found.</p>`;
       return;
     }
-//=============map array===================//
-   blogGrid.innerHTML = blogs.map(blog => {
-  const userName = blog.profiles?.name || "Unknown";
-  const userAvatar = blog.profiles?.imageurl;
-  const userInitial = userName.charAt(0).toUpperCase();
+    //=============map array===================//
+    blogGrid.innerHTML = blogs
+      .map((blog) => {
+        const userName = blog.profiles?.name || "Unknown";
+        const userAvatar = blog.profiles?.imageurl;
+        const userInitial = userName.charAt(0).toUpperCase();
 
-  const avatarHTML = userAvatar
-    ? `<img src="${userAvatar}" class="w-8 h-8 rounded-full object-cover" alt="Avatar">`
-    : `<div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">${userInitial}</div>`;
+        const avatarHTML = userAvatar
+          ? `<img src="${userAvatar}" class="w-8 h-8 rounded-full object-cover" alt="Avatar">`
+          : `<div class="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">${userInitial}</div>`;
 
-  return `
+        return `
     <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition duration-300">
-      ${blog.image_url ? `<img src="${blog.image_url}" class="w-full h-48 object-cover" alt="Blog Image">` : ""}
+      ${
+        blog.image_url
+          ? `<img src="${blog.image_url}" class="w-full h-48 object-cover" alt="Blog Image">`
+          : ""
+      }
       <div class="p-5 flex-1 flex flex-col justify-between">
         <div class="flex items-center gap-3 mb-3">
           ${avatarHTML}
@@ -537,18 +561,26 @@ if (upsertError) {
         </div>
         <div>
           <h2 class="text-xl font-bold text-gray-900 mb-1">${blog.title}</h2>
-          <p class="text-gray-600 text-sm">${blog.content?.slice(0, 150) || ''}...</p>
+          <p class="text-gray-600 text-sm">${
+            blog.content?.slice(0, 150) || ""
+          }...</p>
         </div>
         <div class="mt-4 flex justify-end gap-2">
-          <button onclick="editBlog('${blog.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-sm rounded-lg">Edit</button>
-          <button onclick="deleteBlog('${blog.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm rounded-lg">Delete</button>
+          <button onclick="editBlog('${
+            blog.id
+          }')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-sm rounded-lg">Edit</button>
+          <button onclick="deleteBlog('${
+            blog.id
+          }')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm rounded-lg">Delete</button>
         </div>
-        <p class="text-xs text-gray-400 mt-3 text-right">${new Date(blog.date).toDateString()}</p>
+        <p class="text-xs text-gray-400 mt-3 text-right">${new Date(
+          blog.date
+        ).toDateString()}</p>
       </div>
     </div>
   `;
-}).join('');
-
+      })
+      .join("");
   } catch (err) {
     console.error("Load error:", err.message);
     blogGrid.innerHTML = `<p class="text-red-500 text-center">Something went wrong.</p>`;
@@ -563,7 +595,7 @@ async function editBlog(id) {
   try {
     const {
       data: { user },
-      error: userError
+      error: userError,
     } = await client.auth.getUser();
 
     if (userError || !user) throw new Error("User not logged in");
@@ -581,7 +613,7 @@ async function editBlog(id) {
     hideLoader();
 
     const { value: formValues } = await Swal.fire({
-      title: '✏️ Edit Blog',
+      title: "✏️ Edit Blog",
       html: `
         <div style="text-align: left;">
           <label for="swal-title" style="font-weight: bold;">Title</label>
@@ -593,18 +625,20 @@ async function editBlog(id) {
         </div>
       `,
       focusConfirm: false,
-      confirmButtonText: 'Update Blog',
+      confirmButtonText: "Update Blog",
       showCancelButton: true,
       preConfirm: () => {
-        const title = document.getElementById('swal-title').value.trim();
-        const content = document.getElementById('swal-content').value.trim();
+        const title = document.getElementById("swal-title").value.trim();
+        const content = document.getElementById("swal-content").value.trim();
 
         if (!title || !content) {
-          Swal.showValidationMessage('Please fill in both Title and Description');
+          Swal.showValidationMessage(
+            "Please fill in both Title and Description"
+          );
           return false;
         }
         return { title, content };
-      }
+      },
     });
 
     if (!formValues) return; // cancelled
@@ -616,10 +650,10 @@ async function editBlog(id) {
       .from("my_diary")
       .update({
         title: formValues.title,
-        content: formValues.content
+        content: formValues.content,
       })
       .eq("id", id)
-      .eq("user_id", user.id); 
+      .eq("user_id", user.id);
 
     hideLoader();
 
@@ -627,7 +661,6 @@ async function editBlog(id) {
 
     Swal.fire("✅ Updated!", "Your blog post has been updated.", "success");
     loadBlogs();
-
   } catch (error) {
     hideLoader();
     console.error("Error updating blog:", error.message);
@@ -636,13 +669,14 @@ async function editBlog(id) {
 }
 
 //=========All Blogs ================//
- document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
   const allblogGrid = document.getElementById("allBlogGrid");
 
   async function loadAllBlogs() {
     const { data: blogs, error } = await client
       .from("my_diary")
-      .select(`
+      .select(
+        `
         id,
         title,
         content,
@@ -651,7 +685,8 @@ async function editBlog(id) {
           name,
           imageurl
         )
-      `)
+      `
+      )
       .order("date", { ascending: true });
 
     if (error) {
@@ -672,7 +707,11 @@ async function editBlog(id) {
 
         return `
           <div class=" max-w-sm w-full bg-white dark:bg-gray-800 rounded-lg  shadow p-4 flex flex-col transition-transform hover:scale-[1.02] duration-300 ">
-            ${blog.imageurl ? `<img src="${blog.imageurl}" class="w-full h-40 object-cover rounded mb-3">` : ""}
+            ${
+              blog.imageurl
+                ? `<img src="${blog.imageurl}" class="w-full h-40 object-cover rounded mb-3">`
+                : ""
+            }
             <h2 class="text-lg font-bold mb-2">${blog.title}</h2>
             <p class="text-sm mb-3">${blog.content.slice(0, 10)}...</p>
             
@@ -685,7 +724,9 @@ async function editBlog(id) {
               <p class="text-xs text-gray-500 font-medium">${name}</p>
             </div>
 
-            <p class="text-xs text-gray-400">${new Date(blog.date).toLocaleDateString()}</p>
+            <p class="text-xs text-gray-400">${new Date(
+              blog.date
+            ).toLocaleDateString()}</p>
           </div>
         `;
       })
@@ -746,11 +787,14 @@ function hideLoader() {
 let currentUserId = null;
 
 async function getUser() {
-  const { data: { user }, error } = await client.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await client.auth.getUser();
 
   if (error || !user) {
     console.warn("⚠️ No logged-in user. Using guest mode.");
-    return "guest"; 
+    return "guest";
   }
 
   return user.id;
@@ -761,12 +805,11 @@ async function loadSettings() {
   showLoader();
   currentUserId = await getUser();
   console.log(currentUserId);
-  
 
   const { data, error } = await client
-    .from('setting')
-    .select('*')
-    .eq('user_id', currentUserId)
+    .from("setting")
+    .select("*")
+    .eq("user_id", currentUserId)
     .single();
 
   if (error) {
@@ -782,7 +825,6 @@ async function loadSettings() {
 
   hideLoader();
 }
-
 
 // ===== Save Settings Function =====
 async function saveSettings() {
@@ -809,8 +851,8 @@ async function saveSettings() {
   showLoader();
 
   const { error } = await client
-    .from('setting')
-    .upsert(newSettings, { onConflict: ['user_id'] });
+    .from("setting")
+    .upsert(newSettings, { onConflict: ["user_id"] });
 
   hideLoader();
 
@@ -840,9 +882,9 @@ async function loadSettings() {
   currentUserId = await getUser();
 
   const { data, error } = await client
-    .from('setting')
-    .select('*')
-    .eq('user_id', currentUserId)
+    .from("setting")
+    .select("*")
+    .eq("user_id", currentUserId)
     .single();
 
   if (data) {
