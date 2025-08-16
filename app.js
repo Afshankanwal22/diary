@@ -69,7 +69,7 @@ if (loginForm) {
 }
 
 // ========== google Login ==========
-const googleBtn = document.getElementById("googleLoginBtn");
+// const googleBtn = document.getElementById("googleLoginBtn");
 // if (googleBtn) {
 //   googleBtn.addEventListener("click", async () => {
 //     showLoader();
@@ -119,7 +119,7 @@ const googleBtn = document.getElementById("googleLoginBtn");
 // }
 
 
-
+const googleBtn = document.getElementById("googleLoginBtn")
 googleBtn&&googleBtn.addEventListener("click", async () => {
   showLoader();
   const isLocalhost = window.location.hostname === "127.0.0.1";
