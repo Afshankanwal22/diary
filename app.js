@@ -92,31 +92,55 @@ if (loginForm) {
 // }
 
 
-const googleBtn = document.getElementById("googleLoginBtn");
-if (googleBtn) {
-  googleBtn.addEventListener("click", async () => {
-    showLoader();
+// const googleBtn = document.getElementById("googleLoginBtn");
+// if (googleBtn) {
+//   googleBtn.addEventListener("click", async () => {
+//     showLoader();
 
-    // Detect if running locally or on GitHub Pages
-    const redirectTo =
-      window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
-        ? window.location.origin + "/dashboard.html"
-        : window.location.origin + "/diary/dashboard.html";
+//     // Detect if running locally or on GitHub Pages
+//     const redirectTo =
+//       window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+//         ? window.location.origin + "/dashboard.html"
+//         : window.location.origin + "/diary/dashboard.html";
 
-    const { error } = await client.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: redirectTo,
-        queryParams: { access_type: "offline", prompt: "consent" },
-      },
-    });
+//     const { error } = await client.auth.signInWithOAuth({
+//       provider: "google",
+//       options: {
+//         redirectTo: redirectTo,
+//         queryParams: { access_type: "offline", prompt: "consent" },
+//       },
+//     });
 
-    if (error) {
-      hideLoader();
-      Swal.fire("Google Login Failed", error.message, "error");
-    }
+//     if (error) {
+//       hideLoader();
+//       Swal.fire("Google Login Failed", error.message, "error");
+//     }
+//   });
+// }
+
+
+
+googleBtn.addEventListener("click", async () => {
+  showLoader();
+  const isLocalhost = window.location.hostname === "127.0.0.1";
+
+  const redirectTo = isLocalhost
+    ? "http://127.0.0.1:5501/dashboard.html"
+    : "https://afshankanwal22.github.io/diary/dashboard.html";
+
+  const { error } = await client.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: redirectTo,
+      queryParams: { access_type: "offline", prompt: "consent" },
+    },
   });
-}
+
+  if (error) {
+    hideLoader();
+    Swal.fire("Google Login Failed", error.message, "error");
+  }
+});
 
 
 
