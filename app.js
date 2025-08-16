@@ -69,7 +69,7 @@ if (loginForm) {
 }
 
 // ========== google Login ==========
-// const googleBtn = document.getElementById("googleLoginBtn");
+const googleBtn = document.getElementById("googleLoginBtn");
 // if (googleBtn) {
 //   googleBtn.addEventListener("click", async () => {
 //     showLoader();
