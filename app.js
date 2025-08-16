@@ -69,48 +69,22 @@ if (loginForm) {
 }
 
 // ========== google Login ==========
-// const googleBtn = document.getElementById("googleLoginBtn");
-// if (googleBtn) {
-//   googleBtn.addEventListener("click", async () => {
-//     showLoader();
-//     const redirectTo =
-//       window.location.hostname === "https://127.0.0.1/"
-//         ? window.location.origin + "/dashboard.html"
-//         : window.location.origin + "/diary/dashboard.html";
-//     const { error } = await client.auth.signInWithOAuth({
-//       provider: "google",
-//       options: {
-//         redirectTo: window.location.origin + "/dashboard.html",
-//         queryParams: { access_type: "offline", prompt: "consent" },
-//       },
-//     });
-//     if (error) {
-//       hideLoader();
-//       Swal.fire("Google Login Failed", error.message, "error");
-//     }
-//   });
-// }
-
 
 const googleBtn = document.getElementById("googleLoginBtn");
 if (googleBtn) {
   googleBtn.addEventListener("click", async () => {
     showLoader();
-
-    // Detect if running locally or on GitHub Pages
     const redirectTo =
-      window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
-        ? window.location.origin + "http://127.0.0.1:5501/dashboard.html"
-        : window.location.origin + "https://afshankanwal22.github.io/diary/dashboard.html";;
-
+      window.location.hostname === "https://127.0.0.1/"
+        ? window.location.origin + "/dashboard.html"
+        : window.location.origin + "/diary/dashboard.html";
     const { error } = await client.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: redirectTo,
+        redirectTo: window.location.origin + "/dashboard.html",
         queryParams: { access_type: "offline", prompt: "consent" },
       },
     });
-
     if (error) {
       hideLoader();
       Swal.fire("Google Login Failed", error.message, "error");
