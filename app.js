@@ -76,7 +76,7 @@ if (googleBtn) {
     const redirectTo =
       window.location.hostname === "https://127.0.0.1/"
         ? window.location.origin + "/dashboard.html"
-        : window.location.origin + "/diary";
+        : window.location.origin + "/diary/dashboard.html";
     const { error } = await client.auth.signInWithOAuth({
       provider: "google",
       options: {
