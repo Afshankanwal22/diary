@@ -120,7 +120,7 @@ if (loginForm) {
 
 
 
-googleBtn.addEventListener("click", async () => {
+googleBtn&&googleBtn.addEventListener("click", async () => {
   showLoader();
   const isLocalhost = window.location.hostname === "127.0.0.1";
 
