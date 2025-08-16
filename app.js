@@ -95,6 +95,11 @@ const githubLoginBtn = document.getElementById("githubLoginBtn");
 if (githubLoginBtn) {
   githubLoginBtn.addEventListener("click", async () => {
     showLoader();
+    const redirectTo =
+      window.location.hostname === "https://127.0.0.1/"
+        ? window.location.origin + "/dashboard.html"
+        : window.location.origin + "/login-diary";
+    
     const { error } = await client.auth.signInWithOAuth({
       provider: "github",
       options: {
