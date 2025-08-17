@@ -92,12 +92,6 @@ if (googleBtn) {
   });
 }
 
-
-
-
-
-
-
 //================ github login
 const githubLoginBtn = document.getElementById("githubLoginBtn");
 if (githubLoginBtn) {
@@ -169,10 +163,10 @@ async function logout() {
     confirmButtonText: "Yes, Logout",
   }).then(async (result) => {
     if (result.isConfirmed) {
-      showLoader(); // 👈 only show loader if confirmed
+      showLoader(); 
 
       await client.auth.signOut();
-      hideLoader(); // 👈 hide loader after sign out
+      hideLoader();
 
       Swal.fire({
         icon: "success",
@@ -192,7 +186,7 @@ async function logout() {
         }
       }, 1300);
     } else {
-      hideLoader(); // 👈 if user cancels, still ensure loader hides (optional safety)
+      hideLoader(); 
     }
   });
 }
@@ -324,7 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const { error: uploadError } = await client.storage
-        .from("user") // ✅ your correct bucket name
+        .from("user") 
         .upload(`${folder}/${fileName}`, file, {
           upsert: true,
         });
