@@ -11,7 +11,8 @@ const signupForm = document.getElementById("signupForm");
 if (signupForm) {
   signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-
+    console.log(signupForm);
+  
     const email = document.getElementById("signupEmail").value.trim();
     const password = document.getElementById("signupPassword").value;
     const confirmPassword = document.getElementById(
@@ -75,7 +76,7 @@ if (googleBtn) {
   googleBtn.addEventListener("click", async () => {
     showLoader();
     const redirectTo =
-      window.location.hostname === "https://127.0.0.1/"
+      window.location.hostname === "127.0.0.1"
         ? window.location.origin + "/dashboard.html"
         : window.location.origin + "/diary/dashboard.html";
     const { error } = await client.auth.signInWithOAuth({
@@ -92,15 +93,15 @@ if (googleBtn) {
   });
 }
 
-//================ github login
+//================ github login================//
 const githubLoginBtn = document.getElementById("githubLoginBtn");
 if (githubLoginBtn) {
   githubLoginBtn.addEventListener("click", async () => {
     showLoader();
     const redirectTo =
-      window.location.hostname === "https://127.0.0.1/"
+      window.location.hostname === "127.0.0.1"
         ? window.location.origin + "/dashboard.html"
-        : window.location.origin + "/login-diary";
+        : window.location.origin + "/diary/dashboard.html";
     
     const { error } = await client.auth.signInWithOAuth({
       provider: "github",
@@ -408,6 +409,27 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Image URL:", imageUrl);
       }
 
+       // ===== Ensure user profile exists =====
+      const { data: profile, error: profileError } = await client
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!profile) {
+        const { error: profileInsertError } = await client.from("profiles").insert([
+          {
+            user_id: user.id,
+            name: "Default Name", // ya user input se
+            imageurl: imageUrl || null,
+          },
+        ]);
+
+        if (profileInsertError) {
+          throw new Error("Could not create user profile.");
+        }
+      }
+
       // ===== Save diary entry =====
       const { error: insertError } = await client.from("my_diary").insert([
         {
@@ -676,14 +698,91 @@ async function editBlog(id) {
 }
 
 //=========All Blogs ================//
+// document.addEventListener("DOMContentLoaded", () => {
+//    allblogGrid = document.getElementById("allBlogGrid");
+
+//   async function loadAllBlogs() {
+//     const {
+//     data: { user },
+//     error: authError,
+//   } = await client.auth.getUser();
+//   if (authError || !user) {
+//     console.error("User not found:", authError);
+//     return;
+//   }
+
+//     const { data: blogs, error } = await client
+//       .from("my_diary")
+//       .select(
+//         `
+//         id,
+//         title,
+//         content,
+//         date,
+//         profiles (
+//           name,
+//           imageurl
+//         )
+//       `
+//       )
+//        .eq("user_id", user.id) 
+//       .order("date", { ascending: true });
+
+//     if (error) {
+//       allblogGrid.innerHTML = `<p class="text-red-500">Error loading blogs.</p>`;
+//       return console.error("Blog Load Error:", error);
+//     }
+
+//     if (!blogs.length) {
+//       allblogGrid.innerHTML = `<p class="text-gray-600">No public blogs yet.</p>`;
+//       return;
+//     }
+
+//     allblogGrid.innerHTML = blogs
+//       .map((blog) => {
+//         const name = blog.profiles?.name || "Anonymous";
+//         const firstLetter = name.charAt(0).toUpperCase();
+//         const profileUrl = blog.profiles?.imageurl;
+
+//         return `
+//           <div class=" max-w-sm w-full bg-white dark:bg-gray-800 rounded-lg  shadow p-4 flex flex-col transition-transform hover:scale-[1.02] duration-300 ">
+//             ${
+//               blog.imageurl
+//                 ? `<img src="${blog.imageurl}" class="w-full h-40 object-cover rounded mb-3">`
+//                 : ""
+//             }
+//             <h2 class="text-lg font-bold mb-2">${blog.title}</h2>
+//             <p class="text-sm mb-3">${blog.content.slice(0, 10)}...</p>
+            
+//             <div class="mt-auto flex items-center gap-2">
+//               ${
+//                 profileUrl
+//                   ? `<img src="${profileUrl}" alt="${name}" class="w-6 h-6 rounded-full object-cover">`
+//                   : `<div class="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">${firstLetter}</div>`
+//               }
+//               <p class="text-xs text-gray-500 font-medium">${name}</p>
+//             </div>
+
+//             <p class="text-xs text-gray-400">${new Date(
+//               blog.date
+//             ).toLocaleDateString()}</p>
+//           </div>
+//         `;
+//       })
+//       .join("");
+//   }
+
+//   loadAllBlogs();
+// });
+
+
 document.addEventListener("DOMContentLoaded", () => {
   const allblogGrid = document.getElementById("allBlogGrid");
 
   async function loadAllBlogs() {
     const { data: blogs, error } = await client
       .from("my_diary")
-      .select(
-        `
+      .select(`
         id,
         title,
         content,
@@ -692,9 +791,8 @@ document.addEventListener("DOMContentLoaded", () => {
           name,
           imageurl
         )
-      `
-      )
-      .order("date", { ascending: true });
+      `)
+      .order("date", { ascending: false }); // newest first
 
     if (error) {
       allblogGrid.innerHTML = `<p class="text-red-500">Error loading blogs.</p>`;
@@ -702,7 +800,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (!blogs.length) {
-      allblogGrid.innerHTML = `<p class="text-gray-600">No public blogs yet.</p>`;
+      allblogGrid.innerHTML = `<p class="text-gray-600">No blogs yet.</p>`;
       return;
     }
 
@@ -713,14 +811,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const profileUrl = blog.profiles?.imageurl;
 
         return `
-          <div class=" max-w-sm w-full bg-white dark:bg-gray-800 rounded-lg  shadow p-4 flex flex-col transition-transform hover:scale-[1.02] duration-300 ">
+          <div class="max-w-sm w-full bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col transition-transform hover:scale-[1.02] duration-300">
             ${
               blog.imageurl
                 ? `<img src="${blog.imageurl}" class="w-full h-40 object-cover rounded mb-3">`
                 : ""
             }
             <h2 class="text-lg font-bold mb-2">${blog.title}</h2>
-            <p class="text-sm mb-3">${blog.content.slice(0, 10)}...</p>
+            <p class="text-sm mb-3">${blog.content.slice(0, 100)}...</p>
             
             <div class="mt-auto flex items-center gap-2">
               ${
@@ -731,9 +829,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <p class="text-xs text-gray-500 font-medium">${name}</p>
             </div>
 
-            <p class="text-xs text-gray-400">${new Date(
-              blog.date
-            ).toLocaleDateString()}</p>
+            <p class="text-xs text-gray-400 mt-1">${new Date(blog.date).toLocaleDateString()}</p>
           </div>
         `;
       })
@@ -742,6 +838,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadAllBlogs();
 });
+
 
 //====================setting====================//
 const darkModeToggle = document.getElementById("darkModeToggle");
