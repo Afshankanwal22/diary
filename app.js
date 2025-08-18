@@ -152,63 +152,67 @@ async function saveDiary() {
 // ========== Logout ==========
 
 async function logout() {
-  const {
-    data: { user },
-  } = await client.auth.getUser();
+  try {
+    Swal.fire({
+      title: "Logout?",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Logout",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        showLoader();
 
-  Swal.fire({
-    title: "Logout?",
-    text: "Are you sure you want to logout?",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Yes, Logout",
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      showLoader(); 
+        // Sign out from Supabase
+        await client.auth.signOut();
 
-      await client.auth.signOut();
-      hideLoader();
+        // Clear any localStorage
+        localStorage.removeItem('username');
 
-      Swal.fire({
-        icon: "success",
-        title: "Logged out",
-        timer: 1200,
-        showConfirmButton: false,
-      });
+        hideLoader();
 
-      const provider = user?.app_metadata?.provider;
+        Swal.fire({
+          icon: "success",
+          title: "Logged out",
+          timer: 1200,
+          showConfirmButton: false,
+        });
 
-      setTimeout(() => {
-        if (provider === "google") {
-          window.location.href =
-            "https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?continue=http://127.0.0.1:5501/index.html";
-        } else {
+        // Redirect after logout
+        setTimeout(() => {
           window.location.href = "index.html";
-        }
-      }, 1300);
-    } else {
-      hideLoader(); 
-    }
-  });
+        }, 1300);
+      }
+    });
+  } catch (err) {
+    hideLoader();
+    console.error("Logout error:", err);
+    Swal.fire("Error", "Logout failed", "error");
+  }
 }
 
-// ========== Forgot Password ==========
+//===========forgot password==========//
 const forgotForm = document.getElementById("forgotForm");
-if (forgotForm) {
-  forgotForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    showLoader();
-    const email = document.getElementById("email").value.trim();
-    if (!email) return Swal.fire("Error", "Please enter your email", "error");
+ forgotForm && forgotForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+   showLoader();
+  const email = document.getElementById("email").value.trim();
+  if (!email) return Swal.fire("Error", "Please enter your email", "error");
 
-    const { error } = await client.auth.resetPasswordForEmail(email, {
-      redirectTo: "http://127.0.0.1:5501/updatepass.html",
-    });
+  // Directly redirect to update password page
+  const redirectUrl =
+    window.location.hostname === "127.0.0.1"
+      ? window.location.origin + "/updatepass.html"
+      : window.location.origin + "/diary/updatepass.html";
 
-    if (error) {
+  window.location.href = redirectUrl + "?email=" + encodeURIComponent(email);
+
+
+  if (error) {
       hideLoader();
       Swal.fire("Error", error.message, "error");
     } else {
+      hideLoader();
       Swal.fire(
         "Email Sent!",
         "Check your inbox to reset password.",
@@ -216,8 +220,105 @@ if (forgotForm) {
       );
       document.getElementById("email").value = "";
     }
+});
+
+//===================update password==================//
+// const updateForm = document.getElementById('updateForm');
+   
+// updateForm.addEventListener('submit', async (e) => {
+//   e.preventDefault();
+
+//   const currentPassword = document.getElementById('currentPassword').value.trim();
+//   const newPassword = document.getElementById('newPassword').value.trim();
+//   const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+//   if (!newPassword || !confirmPassword) {
+//     return Swal.fire('Error', 'Please fill in all fields', 'error');
+//   }
+//   if (newPassword !== confirmPassword) {
+//     return Swal.fire('Error', 'New password and confirm password do not match', 'error');
+//   }
+
+//   try {
+//     const { data: user } = await client.auth.getUser();
+
+//     // Only signInWithPassword if email/password user
+//     if (user && user.user_metadata?.provider === 'email' && currentPassword) {
+//       const { error: signInError } = await client.auth.signInWithPassword({
+//         email: user.email,
+//         password: currentPassword
+//       });
+//       if (signInError) return Swal.fire('Error', signInError.message, 'error');
+//     }
+
+//     // Update password
+//     const { error: updateError } = await client.auth.updateUser({
+//       password: newPassword
+//     });
+//     if (updateError) return Swal.fire('Error', updateError.message, 'error');
+
+//     Swal.fire('Success', 'Password updated!', 'success').then(() => {
+//       window.location.href = 'dashboard.html';
+//     });
+
+//   } catch (err) {
+//     console.error(err);
+//     Swal.fire('Error', 'Something went wrong!', 'error');
+//   }
+// });
+
+
+const updateForm = document.getElementById('updateForm');
+
+if (updateForm) {
+  updateForm.addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+    
+
+    const currentPassword = document.getElementById('currentPassword').value.trim();
+    const newPassword = document.getElementById('newPassword').value.trim();
+    const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+    if (!newPassword || !confirmPassword) {
+      return Swal.fire('Error', 'Please fill in all fields', 'error');
+    }
+    if (newPassword !== confirmPassword) {
+      return Swal.fire('Error', 'New password and confirm password do not match', 'error');
+    }
+
+    try {
+      const { data: user, error: getUserError } = await client.auth.getUser();
+      if (getUserError || !user) {
+        return Swal.fire('Error', 'User not found', 'error');
+      }
+
+      const provider = user.app_metadata?.provider || 'email';
+
+      // Only email/password users need current password
+      if (provider === 'email' && currentPassword) {
+        const { error: signInError } = await client.auth.signInWithPassword({
+          email: user.email,
+          password: currentPassword
+        });
+        if (signInError) return Swal.fire('Error', signInError.message, 'error');
+      }
+
+      // Update password
+      const { error: updateError } = await client.auth.updateUser({
+        password: newPassword
+      });
+      if (updateError) return Swal.fire('Error', updateError.message, 'error');
+
+      Swal.fire('Success', 'Password updated!', 'success');
+
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'Something went wrong!', 'error');
+    }
   });
 }
+
+
 
 // ✅ NEW: Fixes reload loop after Google/GitHub login
 client.auth.onAuthStateChange(async (event, session) => {
@@ -792,7 +893,7 @@ document.addEventListener("DOMContentLoaded", () => {
           imageurl
         )
       `)
-      .order("date", { ascending: false }); // newest first
+      .order("date", { ascending: false }); 
 
     if (error) {
       allblogGrid.innerHTML = `<p class="text-red-500">Error loading blogs.</p>`;
