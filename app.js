@@ -1,4 +1,4 @@
-// ========== Supabase Setup ==========
+// / ========== Supabase Setup ==========
 const supabaseUrl = "https://eyyoigiytzhbtcwqvooa.supabase.co";
 console.log(supabaseUrl);
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5eW9pZ2l5dHpoYnRjd3F2b29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NDE0OTUsImV4cCI6MjA3MDUxNzQ5NX0.2LNSR60X9QXh2oih_bmnP31iKo5pV82-0cPa06J2L8k";
@@ -193,132 +193,35 @@ async function logout() {
 
 //===========forgot password==========//
 const forgotForm = document.getElementById("forgotForm");
- forgotForm && forgotForm.addEventListener("submit", (e) => {
+forgotForm && forgotForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-   showLoader();
+  showLoader();
   const email = document.getElementById("email").value.trim();
   if (!email) return Swal.fire("Error", "Please enter your email", "error");
 
-  // Directly redirect to update password page
-  const redirectUrl =
-    window.location.hostname === "127.0.0.1"
-      ? window.location.origin + "/updatepass.html"
-      : window.location.origin + "/diary/updatepass.html";
+  try {
+    // Send password reset email using Supabase
+    const { error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/updatepass.html"
+    });
 
-  window.location.href = redirectUrl + "?email=" + encodeURIComponent(email);
-
-
-  if (error) {
+    if (error) {
       hideLoader();
       Swal.fire("Error", error.message, "error");
     } else {
       hideLoader();
       Swal.fire(
         "Email Sent!",
-        "Check your inbox to reset password.",
+        "Check your inbox for password reset instructions.",
         "success"
       );
       document.getElementById("email").value = "";
     }
+  } catch (err) {
+    hideLoader();
+    Swal.fire("Error", err.message, "error");
+  }
 });
-
-//===================update password==================//
-// const updateForm = document.getElementById('updateForm');
-   
-// updateForm.addEventListener('submit', async (e) => {
-//   e.preventDefault();
-
-//   const currentPassword = document.getElementById('currentPassword').value.trim();
-//   const newPassword = document.getElementById('newPassword').value.trim();
-//   const confirmPassword = document.getElementById('confirmPassword').value.trim();
-
-//   if (!newPassword || !confirmPassword) {
-//     return Swal.fire('Error', 'Please fill in all fields', 'error');
-//   }
-//   if (newPassword !== confirmPassword) {
-//     return Swal.fire('Error', 'New password and confirm password do not match', 'error');
-//   }
-
-//   try {
-//     const { data: user } = await client.auth.getUser();
-
-//     // Only signInWithPassword if email/password user
-//     if (user && user.user_metadata?.provider === 'email' && currentPassword) {
-//       const { error: signInError } = await client.auth.signInWithPassword({
-//         email: user.email,
-//         password: currentPassword
-//       });
-//       if (signInError) return Swal.fire('Error', signInError.message, 'error');
-//     }
-
-//     // Update password
-//     const { error: updateError } = await client.auth.updateUser({
-//       password: newPassword
-//     });
-//     if (updateError) return Swal.fire('Error', updateError.message, 'error');
-
-//     Swal.fire('Success', 'Password updated!', 'success').then(() => {
-//       window.location.href = 'dashboard.html';
-//     });
-
-//   } catch (err) {
-//     console.error(err);
-//     Swal.fire('Error', 'Something went wrong!', 'error');
-//   }
-// });
-
-
-const updateForm = document.getElementById('updateForm');
-
-if (updateForm) {
-  updateForm.addEventListener('submit', async (e) => {
-    e.preventDefault(); 
-    
-
-    const currentPassword = document.getElementById('currentPassword').value.trim();
-    const newPassword = document.getElementById('newPassword').value.trim();
-    const confirmPassword = document.getElementById('confirmPassword').value.trim();
-
-    if (!newPassword || !confirmPassword) {
-      return Swal.fire('Error', 'Please fill in all fields', 'error');
-    }
-    if (newPassword !== confirmPassword) {
-      return Swal.fire('Error', 'New password and confirm password do not match', 'error');
-    }
-
-    try {
-      const { data: user, error: getUserError } = await client.auth.getUser();
-      if (getUserError || !user) {
-        return Swal.fire('Error', 'User not found', 'error');
-      }
-
-      const provider = user.app_metadata?.provider || 'email';
-
-      // Only email/password users need current password
-      if (provider === 'email' && currentPassword) {
-        const { error: signInError } = await client.auth.signInWithPassword({
-          email: user.email,
-          password: currentPassword
-        });
-        if (signInError) return Swal.fire('Error', signInError.message, 'error');
-      }
-
-      // Update password
-      const { error: updateError } = await client.auth.updateUser({
-        password: newPassword
-      });
-      if (updateError) return Swal.fire('Error', updateError.message, 'error');
-
-      Swal.fire('Success', 'Password updated!', 'success');
-
-    } catch (err) {
-      console.error(err);
-      Swal.fire('Error', 'Something went wrong!', 'error');
-    }
-  });
-}
-
-
 
 // ✅ NEW: Fixes reload loop after Google/GitHub login
 client.auth.onAuthStateChange(async (event, session) => {
@@ -362,7 +265,10 @@ client.auth.onAuthStateChange(async (event, session) => {
     // Redirect if not logged in
     if (
       !window.location.href.includes("index.html") &&
-      !window.location.href.includes("login.html")
+      !window.location.href.includes("login.html") &&
+      !window.location.href.includes("signup.html") &&
+      !window.location.href.includes("forget.html") &&
+      !window.location.href.includes("updatepass.html")
     ) {
       window.location.href = "index.html";
     }
@@ -798,87 +704,13 @@ async function editBlog(id) {
   }
 }
 
-//=========All Blogs ================//
-// document.addEventListener("DOMContentLoaded", () => {
-//    allblogGrid = document.getElementById("allBlogGrid");
-
-//   async function loadAllBlogs() {
-//     const {
-//     data: { user },
-//     error: authError,
-//   } = await client.auth.getUser();
-//   if (authError || !user) {
-//     console.error("User not found:", authError);
-//     return;
-//   }
-
-//     const { data: blogs, error } = await client
-//       .from("my_diary")
-//       .select(
-//         `
-//         id,
-//         title,
-//         content,
-//         date,
-//         profiles (
-//           name,
-//           imageurl
-//         )
-//       `
-//       )
-//        .eq("user_id", user.id) 
-//       .order("date", { ascending: true });
-
-//     if (error) {
-//       allblogGrid.innerHTML = `<p class="text-red-500">Error loading blogs.</p>`;
-//       return console.error("Blog Load Error:", error);
-//     }
-
-//     if (!blogs.length) {
-//       allblogGrid.innerHTML = `<p class="text-gray-600">No public blogs yet.</p>`;
-//       return;
-//     }
-
-//     allblogGrid.innerHTML = blogs
-//       .map((blog) => {
-//         const name = blog.profiles?.name || "Anonymous";
-//         const firstLetter = name.charAt(0).toUpperCase();
-//         const profileUrl = blog.profiles?.imageurl;
-
-//         return `
-//           <div class=" max-w-sm w-full bg-white dark:bg-gray-800 rounded-lg  shadow p-4 flex flex-col transition-transform hover:scale-[1.02] duration-300 ">
-//             ${
-//               blog.imageurl
-//                 ? `<img src="${blog.imageurl}" class="w-full h-40 object-cover rounded mb-3">`
-//                 : ""
-//             }
-//             <h2 class="text-lg font-bold mb-2">${blog.title}</h2>
-//             <p class="text-sm mb-3">${blog.content.slice(0, 10)}...</p>
-            
-//             <div class="mt-auto flex items-center gap-2">
-//               ${
-//                 profileUrl
-//                   ? `<img src="${profileUrl}" alt="${name}" class="w-6 h-6 rounded-full object-cover">`
-//                   : `<div class="w-6 h-6 rounded-full bg-gray-500 text-white text-xs flex items-center justify-center">${firstLetter}</div>`
-//               }
-//               <p class="text-xs text-gray-500 font-medium">${name}</p>
-//             </div>
-
-//             <p class="text-xs text-gray-400">${new Date(
-//               blog.date
-//             ).toLocaleDateString()}</p>
-//           </div>
-//         `;
-//       })
-//       .join("");
-//   }
-
-//   loadAllBlogs();
-// });
-
-
 document.addEventListener("DOMContentLoaded", () => {
-  const allblogGrid = document.getElementById("allBlogGrid");
+  const blogGrid = document.getElementById("blogGrid");
+  const allBlogGrid = document.getElementById("allBlogGrid");
+
+  // jis page pe jo ID milegi use kar lenge
+  const targetGrid = blogGrid || allBlogGrid;
+  if (!targetGrid) return; // agar dono hi element nahi hai to function run hi na ho
 
   async function loadAllBlogs() {
     const { data: blogs, error } = await client
@@ -893,19 +725,19 @@ document.addEventListener("DOMContentLoaded", () => {
           imageurl
         )
       `)
-      .order("date", { ascending: false }); 
+      .order("date", { ascending: false });
 
     if (error) {
-      allblogGrid.innerHTML = `<p class="text-red-500">Error loading blogs.</p>`;
+      targetGrid.innerHTML = `<p class="text-red-500">Error loading blogs.</p>`;
       return console.error("Blog Load Error:", error);
     }
 
     if (!blogs.length) {
-      allblogGrid.innerHTML = `<p class="text-gray-600">No blogs yet.</p>`;
+      targetGrid.innerHTML = `<p class="text-gray-600">No blogs yet.</p>`;
       return;
     }
 
-    allblogGrid.innerHTML = blogs
+    targetGrid.innerHTML = blogs
       .map((blog) => {
         const name = blog.profiles?.name || "Anonymous";
         const firstLetter = name.charAt(0).toUpperCase();
@@ -939,7 +771,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadAllBlogs();
 });
-
+ 
 
 //====================setting====================//
 const darkModeToggle = document.getElementById("darkModeToggle");
